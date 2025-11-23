@@ -1,15 +1,20 @@
+# Desactiva la verificación SSL para descargar el modelo
+
 import streamlit as st
 import tempfile
 import os
 
+os.environ['HF_HUB_DISABLE_SSL_VERIFY'] = '1'
 # LangChain and Ollama libraries for AI and PDF processing
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.chains.retrieval import create_retrieval_chain
-from langchain.chains.combine_documents.stuff import create_stuff_documents_chain
+from langchain_classic.chains.retrieval import create_retrieval_chain
+from langchain_classic.chains.combine_documents.stuff import create_stuff_documents_chain
+from langchain_huggingface import HuggingFaceEmbeddings
+
 
 
 # --- 1. UI CONFIGURATION ---
@@ -33,7 +38,7 @@ with st.sidebar:
     st.divider()
     model_name = st.selectbox(
         "AI Engine (Ollama)",
-        ["llama3", "mistral", "gemma"],
+        ["llama3.1", "mistral", "gemma3n"],
         index=0,
         help="Select the model installed on your local machine."
     )
@@ -66,6 +71,7 @@ if uploaded_file is not None:
             # B. Indexing (Embeddings + Vector Store)
             # Convert text to numerical vectors locally
             embeddings = OllamaEmbeddings(model=model_name)
+            #embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
             vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings)
             retriever = vectorstore.as_retriever()
 
@@ -129,3 +135,5 @@ else:
     # Initial State (No file)
     st.markdown("### ⬅️ Step 1: Upload a PDF in the sidebar")
     st.caption("The system will process the text and allow you to ask questions about its content.")
+
+
